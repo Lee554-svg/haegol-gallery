@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>글쓰기 - 해골방</title>
+</head>
+<body>
+  <h2>글쓰기</h2>
+  <form action="/write" method="POST">
+    작성자: <input type="text" name="author" required><br><br>
+    제목: <input type="text" name="title" required><br><br>
+    내용: <br>
+    <textarea name="content" rows="10" cols="50" required></textarea><br><br>
+    <button type="submit">작성</button>
+  </form>
+  <a href="/">← 목록</a>
+</body>
+</html>

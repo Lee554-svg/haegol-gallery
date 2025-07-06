@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title><%= post.title %> - 해골방</title>
+</head>
+<body>
+  <h2><%= post.title %></h2>
+  <p><%= post.content %></p>
+  <small>작성자: <%= post.author %></small><br>
+  <small>작성일: <%= post.date %></small><br><br>
+  <a href="/">← 목록</a>
+</body>
+</html>
+<hr>
+<form action="/delete/<%= post.id %>" method="POST">
+  <label>관리자 비밀번호: </label>
+  <input type="password" name="adminPassword" required>
+  <button type="submit">글 삭제</button>
+</form>
+<h3>💬 댓글</h3>
+<ul>
+  <% post.comments.forEach(function(comment) { %>
+    <li><strong><%= comment.name %></strong>: <%= comment.text %></li>
+  <% }) %>
+</ul>
+
+<hr>
+<form action="/comment/<%= post.id %>" method="POST">
+  <input type="text" name="name" placeholder="이름" required>
+  <input type="text" name="text" placeholder="댓글 내용" required>
+  <button type="submit">댓글 달기</button>
+</form>
