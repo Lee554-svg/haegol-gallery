@@ -17,14 +17,23 @@ app.get('/write', (req, res) => {
 
 app.post('/write', (req, res) => {
   const { title, content, author } = req.body;
-  const now = new Date().toLocaleString('ko-KR', { hour12: false });
+  const now = new Date().toLocaleString('ko-KR', {
+  timeZone: 'Asia/Seoul',
+  hour12: false,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit'
+});
   posts.unshift({
-    id: posts.length + 1,
+    id: Date.now(),   // 여기만 변경!
     title,
     content,
     author,
     createdAt: now,
-    comments: []   // 여기에 댓글 배열 추가
+    comments: []
   });
   res.redirect('/');
 });

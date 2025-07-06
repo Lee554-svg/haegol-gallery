@@ -29,10 +29,11 @@
         <td><%= posts.length - idx %></td>
         <td style="text-align: left;"><a href="/post/<%= post.id %>"><%= post.title %></a></td>
         <td><%= post.author %></td>
-        <td><%= post.date %></td>
+        <td><%= post.createdAt %></td>
       </tr>
     <% }) %>
   </table>
 
 </body>
 </html>
+
