@@ -10,6 +10,7 @@
     th { background: #ddd; }
     a { text-decoration: none; color: #000; }
     .write-btn { margin: 1em 0; display: inline-block; }
+    img.post-image { max-height: 50px; max-width: 50px; vertical-align: middle; margin-right: 10px; }
   </style>
 </head>
 <body>
@@ -28,7 +29,12 @@
     <% posts.forEach((post, idx) => { %>
       <tr>
         <td><%= posts.length - idx %></td>
-        <td style="text-align: left;"><a href="/post/<%= post.id %>"><%= post.title %></a></td>
+        <td style="text-align: left;">
+          <% if (post.imageUrl) { %>
+            <img src="<%= post.imageUrl %>" alt="post image" class="post-image" />
+          <% } %>
+          <a href="/post/<%= post.id %>"><%= post.title %></a>
+        </td>
         <td><%= post.author %></td>
         <td><%= post.createdAt %></td>
         <td>👍 <%= post.upvotes %> / 👎 <%= post.downvotes %></td>
@@ -38,5 +44,9 @@
 
 </body>
 </html>
+
+
+
+
 
 

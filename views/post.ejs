@@ -10,6 +10,7 @@
     button { cursor: pointer; }
     .comments { margin-top: 2em; }
     .comment { border-bottom: 1px solid #ccc; padding: 0.5em 0; }
+    img.post-image { max-width: 100%; max-height: 400px; display: block; margin-bottom: 1em; }
   </style>
 </head>
 <body>
@@ -17,13 +18,18 @@
   <h1><%= post.title %></h1>
   <p>작성자: <%= post.author %></p>
   <p>작성일: <%= post.createdAt %></p>
+
+  <% if(post.imageUrl) { %>
+    <img src="<%= post.imageUrl %>" alt="post image" class="post-image" />
+  <% } %>
+
   <p><%= post.content %></p>
 
   <hr />
 
   <!-- 좋아요 / 싫어요 -->
   <form action="/post/<%= post.id %>/upvote" method="POST">
-    <button type="submit">👍 개추 (<%= post.upvotes %>)</button>
+    <button type="submit">👍 갈추 (<%= post.upvotes %>)</button>
   </form>
 
   <form action="/post/<%= post.id %>/downvote" method="POST">
@@ -55,5 +61,6 @@
 
 </body>
 </html>
+
 
 

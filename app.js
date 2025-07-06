@@ -1,9 +1,31 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const session = require('express-session');
+const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
+const fs = require('fs');
+const path = require('path');
+
 const app = express();
+const upload = multer({ dest: 'uploads/' }); // multer 임시 저장용
+
+// Cloudinary 설정
+cloudinary.config({
+  cloud_name: 'dd6xtxudi',
+  api_key: '732873783656938',
+  api_secret: 'D5CptXx43n1qBQjbGkQ7HTv1bqA'
+});
 
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(session({
+  secret: 'your-secret-key',
+  resave: false,
+  saveUninitialized: true,
+}));
+
+// 정적 파일 서비스 (필요시)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 let posts = [];
 
@@ -15,7 +37,8 @@ app.get('/write', (req, res) => {
   res.render('write');
 });
 
-app.post('/write', (req, res) => {
+// 글쓰기 - 사진 업로드 포함
+app.post('/write', upload.single('image'), async (req, res) => {
   const { title, content, author } = req.body;
   const now = new Date().toLocaleString('ko-KR', {
     timeZone: 'Asia/Seoul',
@@ -27,16 +50,32 @@ app.post('/write', (req, res) => {
     minute: '2-digit',
     second: '2-digit'
   });
+
+  let imageUrl = null;
+  try {
+    if (req.file) {
+      // Cloudinary 업로드
+      const result = await cloudinary.uploader.upload(req.file.path);
+      imageUrl = result.secure_url;
+      // 업로드 후 임시파일 삭제
+      fs.unlinkSync(req.file.path);
+    }
+  } catch (err) {
+    console.error("Cloudinary 업로드 오류:", err);
+  }
+
   posts.unshift({
     id: Date.now(),
     title,
     content,
     author,
     createdAt: now,
+    imageUrl,   // 이미지 URL 저장
     comments: [],
-    upvotes: 0,    // 좋아요 수
-    downvotes: 0   // 싫어요 수
+    upvotes: 0,
+    downvotes: 0
   });
+
   res.redirect('/');
 });
 
@@ -46,27 +85,41 @@ app.get('/post/:id', (req, res) => {
   res.render('post', { post });
 });
 
-// 좋아요(갈추) 버튼
+// 갈추(좋아요) - 세션 중복 방지
 app.post('/post/:id/upvote', (req, res) => {
   const id = parseInt(req.params.id);
+  if (!req.session.voted) req.session.voted = {};
+
+  if (req.session.voted[id]?.upvote) {
+    return res.send("<script>alert('이미 갈추를 눌렀습니다!'); history.back();</script>");
+  }
+
   const post = posts.find(p => p.id === id);
   if (post) {
-    post.upvotes += 1;
+    post.upvotes++;
+    req.session.voted[id] = { ...req.session.voted[id], upvote: true };
   }
   res.redirect(`/post/${id}`);
 });
 
-// 싫어요(문추) 버튼
+// 문추(싫어요) - 세션 중복 방지
 app.post('/post/:id/downvote', (req, res) => {
   const id = parseInt(req.params.id);
+  if (!req.session.voted) req.session.voted = {};
+
+  if (req.session.voted[id]?.downvote) {
+    return res.send("<script>alert('이미 문추를 눌렀습니다!'); history.back();</script>");
+  }
+
   const post = posts.find(p => p.id === id);
   if (post) {
-    post.downvotes += 1;
+    post.downvotes++;
+    req.session.voted[id] = { ...req.session.voted[id], downvote: true };
   }
   res.redirect(`/post/${id}`);
 });
 
-const ADMIN_PASSWORD = "doki3864"; // 관리자 비번
+const ADMIN_PASSWORD = "doki3864";
 
 app.post('/delete/:id', (req, res) => {
   const id = parseInt(req.params.id);
@@ -96,6 +149,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`해골방 갤러리 실행 중: http://localhost:${PORT}`);
 });
+
 
 
 
