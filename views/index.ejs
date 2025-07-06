@@ -23,6 +23,7 @@
       <th>제목</th>
       <th>작성자</th>
       <th>작성시간</th>
+      <th>👍 갈추 / 👎 문추</th>
     </tr>
     <% posts.forEach((post, idx) => { %>
       <tr>
@@ -30,10 +31,12 @@
         <td style="text-align: left;"><a href="/post/<%= post.id %>"><%= post.title %></a></td>
         <td><%= post.author %></td>
         <td><%= post.createdAt %></td>
+        <td>👍 <%= post.upvotes %> / 👎 <%= post.downvotes %></td>
       </tr>
     <% }) %>
   </table>
 
 </body>
 </html>
+
 
