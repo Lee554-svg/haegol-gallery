@@ -1,3 +1,4 @@
+// ✅ app.js 전체 수정본
 const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
@@ -47,22 +48,20 @@ function replaceEmotes(text) {
     '(니디티)': 'niditi.jpeg',
     '(그긴거)': 'wa.jpeg'
   };
-
   let safeText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
   for (const key in emoteMap) {
     const imgTag = `<img src="/emotes/${emoteMap[key]}" alt="${key}" style="height: 20px;" />`;
     const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     safeText = safeText.replace(new RegExp(escapedKey, 'g'), imgTag);
   }
-
   return safeText;
 }
 app.locals.replaceEmotes = replaceEmotes;
 
 app.get('/', (req, res) => {
   const page = parseInt(req.query.page) || 1;
-  const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
+  const totalPostCount = Array.isArray(posts) ? posts.length : 0;
+  const totalPages = Math.ceil(totalPostCount / POSTS_PER_PAGE);
   const startIdx = (page - 1) * POSTS_PER_PAGE;
   const paginatedPosts = posts.slice(startIdx, startIdx + POSTS_PER_PAGE)
     .map(post => ({ ...post, safeTitle: replaceEmotes(post.title) }));
@@ -71,7 +70,7 @@ app.get('/', (req, res) => {
     posts: paginatedPosts,
     currentPage: page,
     totalPages,
-    totalPosts: posts.length,  // ← 이거 추가!
+    totalPosts: totalPostCount,
     searchQuery: ''
   });
 });
@@ -83,14 +82,9 @@ app.get('/write', (req, res) => {
 app.post('/write', upload.single('image'), async (req, res) => {
   const { title, content, author } = req.body;
   const now = new Date().toLocaleString('ko-KR', {
-    timeZone: 'Asia/Seoul',
-    hour12: false,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
+    timeZone: 'Asia/Seoul', hour12: false,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit'
   });
 
   let imageUrl = null;
@@ -105,18 +99,9 @@ app.post('/write', upload.single('image'), async (req, res) => {
   }
 
   posts.unshift({
-    id: Date.now(),
-    title,
-    content,
-    author,
-    createdAt: now,
-    imageUrl,
-    safeTitle: replaceEmotes(title),
-    safeContent: replaceEmotes(content),
-    comments: [],
-    upvotes: 0,
-    downvotes: 0,
-    views: 0
+    id: Date.now(), title, content, author, createdAt: now, imageUrl,
+    safeTitle: replaceEmotes(title), safeContent: replaceEmotes(content),
+    comments: [], upvotes: 0, downvotes: 0, views: 0
   });
 
   res.redirect('/');
@@ -126,13 +111,11 @@ app.get('/post/:id', (req, res) => {
   const id = parseInt(req.params.id);
   const post = posts.find(p => p.id === id);
   if (!post) return res.status(404).send('글이 없습니다.');
-
   if (!req.session.viewed) req.session.viewed = {};
   if (!req.session.viewed[id]) {
     post.views++;
     req.session.viewed[id] = true;
   }
-
   res.render('post', { post });
 });
 
@@ -142,13 +125,11 @@ app.post('/post/:id/upvote', (req, res) => {
   if (req.session.voted[id]?.upvote) {
     return res.send("<script>alert('이미 갈추를 눌렀습니다!'); history.back();</script>");
   }
-
   const post = posts.find(p => p.id === id);
   if (post) {
     post.upvotes++;
     req.session.voted[id] = { ...req.session.voted[id], upvote: true };
   }
-
   res.redirect(`/post/${id}`);
 });
 
@@ -158,13 +139,11 @@ app.post('/post/:id/downvote', (req, res) => {
   if (req.session.voted[id]?.downvote) {
     return res.send("<script>alert('이미 문추를 눌렀습니다!'); history.back();</script>");
   }
-
   const post = posts.find(p => p.id === id);
   if (post) {
     post.downvotes++;
     req.session.voted[id] = { ...req.session.voted[id], downvote: true };
   }
-
   res.redirect(`/post/${id}`);
 });
 
@@ -181,17 +160,11 @@ app.post('/comment/:id', (req, res) => {
 app.get('/search', (req, res) => {
   const keyword = (req.query.q || '').trim().toLowerCase();
   const page = parseInt(req.query.page) || 1;
-
-  if (!keyword) {
-    return res.render('search', { posts: [], keyword, currentPage: 1, totalPages: 1 });
-  }
-
   const matched = posts.filter(post =>
     post.title.toLowerCase().includes(keyword) ||
     post.content.toLowerCase().includes(keyword) ||
     post.author.toLowerCase().includes(keyword)
   );
-
   const totalPages = Math.ceil(matched.length / POSTS_PER_PAGE);
   const startIdx = (page - 1) * POSTS_PER_PAGE;
   const paginatedPosts = matched.slice(startIdx, startIdx + POSTS_PER_PAGE)
@@ -201,7 +174,8 @@ app.get('/search', (req, res) => {
     posts: paginatedPosts,
     keyword: req.query.q,
     currentPage: page,
-    totalPages
+    totalPages,
+    totalPosts: matched.length
   });
 });
 
@@ -218,7 +192,6 @@ app.post('/delete/:id', (req, res) => {
 
 app.get('/golnym', (req, res) => {
   const page = parseInt(req.query.page) || 1;
-
   const golnymAll = posts.filter(p => p.upvotes >= 10);
   const totalPages = Math.ceil(golnymAll.length / POSTS_PER_PAGE);
   const startIdx = (page - 1) * POSTS_PER_PAGE;
@@ -228,7 +201,8 @@ app.get('/golnym', (req, res) => {
   res.render('golnym', {
     posts: paginated,
     currentPage: page,
-    totalPages
+    totalPages,
+    totalPosts: golnymAll.length
   });
 });
 
@@ -236,6 +210,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`해골방 갤러리 실행 중: http://localhost:${PORT}`);
 });
-
-
-
