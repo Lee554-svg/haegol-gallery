@@ -31,7 +31,7 @@
     </tr>
     <% posts.forEach((post, idx) => { %>
       <tr>
-        <td><%= posts.length - idx %></td>
+        <td><%= totalPosts - ((currentPage - 1) * pageSize) - idx %></td>
         <td style="text-align: left;">
           <% if (post.imageUrl) { %>
             <img src="<%= post.imageUrl %>" alt="post image" class="post-image" />
@@ -60,6 +60,7 @@
 
 </body>
 </html>
+
 
 
 
