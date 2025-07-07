@@ -16,7 +16,7 @@ cloudinary.config({
   api_secret: 'D5CptXx43n1qBQjbGkQ7HTv1bqA'
 });
 
-const POSTS_PER_PAGE = 20;
+const POSTS_PER_PAGE = 10;
 
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
