@@ -59,9 +59,12 @@ function replaceEmotes(text) {
 }
 app.locals.replaceEmotes = replaceEmotes;
 
-// 메인 페이지
 app.get('/', (req, res) => {
-  res.render('index', { posts });
+  const postsWithSafeTitle = posts.map(post => ({
+    ...post,
+    safeTitle: replaceEmotes(post.title),
+  }));
+  res.render('index', { posts: postsWithSafeTitle });
 });
 
 // 글쓰기 페이지
@@ -170,11 +173,6 @@ app.post('/comment/:id', (req, res) => {
   res.redirect(`/post/${id}`);
 });
 
-// 검색
-app.get('/search', (req, res) => {
-  res.render('search', { posts: [], keyword: '' });
-});
-
 app.post('/search', (req, res) => {
   const keyword = req.body.keyword.trim().toLowerCase();
   if (!keyword) return res.render('search', { posts: [], keyword: '' });
@@ -183,7 +181,10 @@ app.post('/search', (req, res) => {
     post.title.toLowerCase().includes(keyword) ||
     post.content.toLowerCase().includes(keyword) ||
     post.author.toLowerCase().includes(keyword)
-  );
+  ).map(post => ({
+    ...post,
+    safeTitle: replaceEmotes(post.title),
+  }));
 
   res.render('search', { posts: filtered, keyword });
 });
@@ -201,9 +202,13 @@ app.post('/delete/:id', (req, res) => {
   res.redirect('/');
 });
 
-// 골념글 (갈추 10개 이상)
 app.get('/golnym', (req, res) => {
-  const golnymPosts = posts.filter(p => p.upvotes >= 10);
+  const golnymPosts = posts
+    .filter(p => p.upvotes >= 10)
+    .map(post => ({
+      ...post,
+      safeTitle: replaceEmotes(post.title),
+    }));
   res.render('golnym', { posts: golnymPosts });
 });
 

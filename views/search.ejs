@@ -42,7 +42,7 @@
             <% if (post.imageUrl) { %>
               <img src="<%= post.imageUrl %>" alt="post image" class="post-image" />
             <% } %>
-            <a href="/post/<%= post.id %>"><%= post.title %></a>
+            <a href="/post/<%= post.id %>"><%- post.safeTitle %></a>
           </td>
           <td><%= post.author %></td>
           <td><%= post.createdAt %></td>

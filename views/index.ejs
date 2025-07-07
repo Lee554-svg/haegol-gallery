@@ -23,7 +23,7 @@
 
   <!-- 검색 폼 -->
   <form class="search-form" action="/search" method="GET">
-    <input type="text" name="q" placeholder="검색어 입력" value="<%= searchQuery %>" />
+    <input type="text" name="q" placeholder="검색어 입력" value="<%= searchQuery || '' %>" />
     <button type="submit" class="search-btn">검색</button>
     <a href="/golnym" class="golnym-link">🔥 골념글 보기 (👍10개 이상)</a>
   </form>
@@ -45,7 +45,6 @@
           <% if (post.imageUrl) { %>
             <img src="<%= post.imageUrl %>" alt="post image" class="post-image" />
           <% } %>
-          <!-- 변환된 safeTitle로 출력 (HTML 해석됨) -->
           <a href="/post/<%= post.id %>"><%- post.safeTitle %></a>
         </td>
         <td><%= post.author %></td>
@@ -57,3 +56,4 @@
 
 </body>
 </html>
+
