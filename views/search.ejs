@@ -11,14 +11,17 @@
     a { text-decoration: none; color: #000; }
     .write-btn { margin: 1em 0; display: inline-block; }
     img.post-image { max-height: 50px; max-width: 50px; vertical-align: middle; margin-right: 10px; }
+    .pagination { margin-top: 1.5em; text-align: center; }
+    .pagination a { margin: 0 5px; text-decoration: none; color: blue; }
+    .pagination strong { margin: 0 5px; color: red; }
   </style>
 </head>
 <body>
 
   <h1>🔍 검색 - 해골방 갤러리</h1>
 
-  <form action="/search" method="POST" style="margin-bottom: 1em;">
-    <input type="text" name="keyword" placeholder="검색어 입력" value="<%= keyword %>" required />
+  <form action="/search" method="GET" style="margin-bottom: 1em;">
+    <input type="text" name="q" placeholder="검색어 입력" value="<%= keyword %>" required />
     <button type="submit">검색</button>
   </form>
 
@@ -37,7 +40,7 @@
       </tr>
       <% posts.forEach((post, idx) => { %>
         <tr>
-          <td><%= posts.length - idx %></td>
+          <td><%= totalPosts - ((currentPage - 1) * pageSize) - idx %></td>
           <td style="text-align: left;">
             <% if (post.imageUrl) { %>
               <img src="<%= post.imageUrl %>" alt="post image" class="post-image" />
@@ -50,8 +53,23 @@
         </tr>
       <% }) %>
     </table>
+
+    <!-- 페이지네이션 -->
+    <div class="pagination">
+      <% if (totalPages > 1) { %>
+        <% for (let i = 1; i <= totalPages; i++) { %>
+          <% if (i === currentPage) { %>
+            <strong>[<%= i %>]</strong>
+          <% } else { %>
+            <a href="/search?q=<%= encodeURIComponent(keyword) %>&page=<%= i %>">[<%= i %>]</a>
+          <% } %>
+        <% } %>
+      <% } %>
+    </div>
   <% } %>
 
   <p><a href="/">← 글 목록으로</a></p>
 </body>
 </html>
+
+

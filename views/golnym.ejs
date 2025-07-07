@@ -11,6 +11,9 @@
     a { text-decoration: none; color: #000; }
     .back-link { margin-bottom: 1em; display: inline-block; }
     img.post-image { max-height: 50px; max-width: 50px; vertical-align: middle; margin-right: 10px; }
+    .pagination { margin-top: 1.5em; text-align: center; }
+    .pagination a { margin: 0 5px; text-decoration: none; color: blue; }
+    .pagination strong { margin: 0 5px; color: red; }
   </style>
 </head>
 <body>
@@ -33,7 +36,6 @@
           <% if (post.imageUrl) { %>
             <img src="<%= post.imageUrl %>" alt="post image" class="post-image" />
           <% } %>
-          <!-- 디시콘 변환된 safeTitle 출력 (HTML 해석) -->
           <a href="/post/<%= post.id %>"><%- post.safeTitle %></a>
         </td>
         <td><%= post.author %></td>
@@ -43,7 +45,21 @@
     <% }) %>
   </table>
 
+  <!-- 페이지네이션 -->
+  <div class="pagination">
+    <% if (totalPages > 1) { %>
+      <% for (let i = 1; i <= totalPages; i++) { %>
+        <% if (i === currentPage) { %>
+          <strong>[<%= i %>]</strong>
+        <% } else { %>
+          <a href="/golnym?page=<%= i %>">[<%= i %>]</a>
+        <% } %>
+      <% } %>
+    <% } %>
+  </div>
+
 </body>
 </html>
+
 
 
