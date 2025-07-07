@@ -3,59 +3,70 @@
 <head>
   <meta charset="UTF-8" />
   <title>💀 해골방 갤러리</title>
+  <style>
+    body { font-family: "돋움", sans-serif; background: #f5f5f5; padding: 2em; max-width: 900px; margin: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 0.5em; text-align: center; }
+    a { text-decoration: none; color: #000; }
+    .pagination { margin-top: 1em; }
+    .pagination a, .pagination span { margin: 0 0.2em; padding: 0.3em 0.6em; border: 1px solid #ccc; }
+    .pagination .current { background: #333; color: white; font-weight: bold; }
+  </style>
 </head>
 <body>
-  <h1>💀 해골방 갤러리</h1>
 
-  <form action="/" method="GET">
-    <input type="text" name="q" value="<%= searchQuery || '' %>" placeholder="검색어 입력" />
-    <button type="submit"><%= searchQuery ? searchQuery + ' 검색' : '검색' %></button>
-  </form>
+<h1>💀 해골방 갤러리</h1>
 
-  <a href="/golnym">🔥 골념글 보기 (👍10개 이상)</a> | <a href="/write">[글쓰기]</a>
+<form action="/" method="GET" style="margin-bottom: 1em;">
+  <input type="text" name="q" value="<%= searchQuery %>" placeholder="검색어를 입력하세요" />
+  <button type="submit">검색</button>
+</form>
 
-  <table border="1" cellpadding="5" cellspacing="0">
-    <thead>
+<p><a href="/golnym">🔥 골념글 보기 (👍10개 이상)</a> | <a href="/write">[글쓰기]</a></p>
+
+<table>
+  <thead>
+    <tr>
+      <th>번호</th>
+      <th>제목</th>
+      <th>작성자</th>
+      <th>작성시간</th>
+      <th>👍 / 👎</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% posts.forEach((post, idx) => { %>
       <tr>
-        <th>번호</th>
-        <th>제목</th>
-        <th>작성자</th>
-        <th>작성시간</th>
-        <th>👍 갈추 / 👎 문추</th>
+        <td><%= posts.length - idx - ((currentPage - 1) * POSTS_PER_PAGE) %></td>
+        <td>
+          <% if (post.imageUrl) { %>
+            <img src="<%= post.imageUrl %>" alt="image" style="height:20px; vertical-align: middle; margin-right: 4px;" />
+          <% } %>
+          <a href="/post/<%= post.id %>"><%- post.safeTitle %></a>
+        </td>
+        <td><%= post.author %></td>
+        <td><%= post.createdAt %></td>
+        <td>👍 <%= post.upvotes %> / 👎 <%= post.downvotes %></td>
       </tr>
-    </thead>
-    <tbody>
-      <% posts.forEach((post, idx) => { %>
-        <tr>
-          <td><%= posts.length - idx + (currentPage - 1) * POSTS_PER_PAGE %></td>
-          <td>
-            <% if (post.imageUrl) { %>
-              <img src="<%= post.imageUrl %>" alt="첨부 이미지" style="height: 30px;" />
-            <% } %>
-            <a href="/post/<%= post.id %>"><%- post.safeTitle %></a>
-          </td>
-          <td><%= post.author %></td>
-          <td><%= post.createdAt %></td>
-          <td>👍 <%= post.upvotes %> / 👎 <%= post.downvotes %></td>
-        </tr>
-      <% }) %>
-    </tbody>
-  </table>
+    <% }) %>
+  </tbody>
+</table>
 
+<div class="pagination">
   <% if (totalPages > 1) { %>
-    <div>
-      <% for(let i = 1; i <= totalPages; i++) { %>
-        <% if(i === currentPage) { %>
-          [<%= i %>]
-        <% } else { %>
-          <a href="/?page=<%= i %>">[<%= i %>]</a>
-        <% } %>
+    <% for(let i = 1; i <= totalPages; i++) { %>
+      <% if(i === currentPage) { %>
+        <span class="current"><%= i %></span>
+      <% } else { %>
+        <a href="?page=<%= i %><%= searchQuery ? '&q=' + encodeURIComponent(searchQuery) : '' %>"><%= i %></a>
       <% } %>
-    </div>
+    <% } %>
   <% } %>
+</div>
 
 </body>
 </html>
+
 
 
 
