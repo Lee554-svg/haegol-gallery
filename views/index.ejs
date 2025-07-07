@@ -66,17 +66,17 @@
   </table>
 
   <!-- ✅ 페이지네이션 -->
-  <div class="pagination">
-    <% if (totalPages > 1) { %>
-      <% for (let i = 1; i <= totalPages; i++) { %>
-        <% if (i === currentPage) { %>
-          <strong>[<%= i %>]</strong>
-        <% } else { %>
-          <a href="/?page=<%= i %>">[<%= i %>]</a>
-        <% } %>
-      <% } %>
-    <% } %>
-  </div>
+   <div class="pagination">
+   <% if (totalPages > 1) { %>
+     <% for (let i = 1; i <= totalPages; i++) { %>
+       <% if (i === currentPage) { %>
+        <strong>[<%= i %>]</strong>
+       <% } else { %>
+        <a href="/?page=<%= i %>">[<%= i %>]</a>
+       <% } %>
+     <% } %>
+   <% } %>
+ </div>
 
 </body>
 </html>
