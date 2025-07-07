@@ -1,3 +1,4 @@
+// ✅ app.js 전체 수정본
 const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
@@ -8,14 +9,14 @@ const path = require('path');
 
 const app = express();
 const upload = multer({ dest: 'uploads/' });
-const POSTS_PER_PAGE = 10;
 
-// 클라우디너리 설정
 cloudinary.config({
   cloud_name: 'dd6xtxudi',
   api_key: '732873783656938',
   api_secret: 'D5CptXx43n1qBQjbGkQ7HTv1bqA'
 });
+
+const POSTS_PER_PAGE = 10;
 
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -27,27 +28,15 @@ app.use(session({
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static('public'));
 
-// 전역 변수
 let posts = [];
 
-// 디시콘 처리 함수
 function replaceEmotes(text) {
   const emoteMap = {
-    '(갈추)': 'galchu.jpeg',
-    '(문추)': 'munchu.jpeg',
-    '(영정경고)': 'mun.jpeg',
-    '(세벤각)': 'saban.jpeg',
-    '(단약)': 'dan.jpeg',
-    '(욕)': 'galmun.jpeg',
-    '(대해골)': 'bone.jpeg',
-    '(세팸)': 'sepam.jpeg',
-    '(해팸)': 'hapam.jpeg',
-    '(조선전쟁)': 'jo.jpeg',
-    '(볼살)': 'bol.jpeg',
-    '(갈팸)': 'galpam.jpeg',
-    '(탈모)': 'egg.jpeg',
-    '(니디티)': 'niditi.jpeg',
-    '(그긴거)': 'wa.jpeg'
+    '(갈추)': 'galchu.jpeg', '(문추)': 'munchu.jpeg', '(영정경고)': 'mun.jpeg',
+    '(세벤각)': 'saban.jpeg', '(단약)': 'dan.jpeg', '(욕)': 'galmun.jpeg',
+    '(대해골)': 'bone.jpeg', '(세팸)': 'sepam.jpeg', '(해팸)': 'hapam.jpeg',
+    '(조선전쟁)': 'jo.jpeg', '(볼살)': 'bol.jpeg', '(갈팸)': 'galpam.jpeg',
+    '(탈모)': 'egg.jpeg', '(니디티)': 'niditi.jpeg', '(그긴거)': 'wa.jpeg'
   };
   let safeText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
   for (const key in emoteMap) {
@@ -59,7 +48,6 @@ function replaceEmotes(text) {
 }
 app.locals.replaceEmotes = replaceEmotes;
 
-// 📄 메인 페이지 + 페이지네이션
 app.get('/', (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const totalPostCount = posts.length;
@@ -73,12 +61,10 @@ app.get('/', (req, res) => {
     currentPage: page,
     totalPages,
     totalPosts: totalPostCount,
-    POSTS_PER_PAGE,
     searchQuery: ''
   });
 });
 
-// 글쓰기
 app.get('/write', (req, res) => {
   res.render('write');
 });
@@ -86,61 +72,48 @@ app.get('/write', (req, res) => {
 app.post('/write', upload.single('image'), async (req, res) => {
   const { title, content, author } = req.body;
   const now = new Date().toLocaleString('ko-KR', {
-    timeZone: 'Asia/Seoul',
+    timeZone: 'Asia/Seoul', hour12: false,
     year: 'numeric', month: '2-digit', day: '2-digit',
     hour: '2-digit', minute: '2-digit', second: '2-digit'
   });
 
   let imageUrl = null;
   try {
-    if (req.file) {
+    if (req.file && req.file.path) {
       const result = await cloudinary.uploader.upload(req.file.path);
       imageUrl = result.secure_url;
       fs.unlinkSync(req.file.path);
     }
   } catch (err) {
-    console.error("이미지 업로드 오류:", err);
+    console.error("🔥 Cloudinary 업로드 오류:", err);
   }
 
   posts.unshift({
-    id: Date.now(),
-    title,
-    content,
-    author,
-    createdAt: now,
-    imageUrl,
-    safeTitle: replaceEmotes(title),
-    safeContent: replaceEmotes(content),
-    comments: [],
-    upvotes: 0,
-    downvotes: 0,
-    views: 0
+    id: Date.now(), title, content, author, createdAt: now, imageUrl,
+    safeTitle: replaceEmotes(title), safeContent: replaceEmotes(content),
+    comments: [], upvotes: 0, downvotes: 0, views: 0
   });
 
   res.redirect('/');
 });
 
-// 게시글 보기
 app.get('/post/:id', (req, res) => {
   const id = parseInt(req.params.id);
   const post = posts.find(p => p.id === id);
   if (!post) return res.status(404).send('글이 없습니다.');
-
   if (!req.session.viewed) req.session.viewed = {};
   if (!req.session.viewed[id]) {
     post.views++;
     req.session.viewed[id] = true;
   }
-
   res.render('post', { post });
 });
 
-// 갈추/문추
 app.post('/post/:id/upvote', (req, res) => {
   const id = parseInt(req.params.id);
   if (!req.session.voted) req.session.voted = {};
   if (req.session.voted[id]?.upvote) {
-    return res.send("<script>alert('이미 갈추했습니다.'); history.back();</script>");
+    return res.send("<script>alert('이미 갈추를 눌렀습니다!'); history.back();</script>");
   }
   const post = posts.find(p => p.id === id);
   if (post) {
@@ -154,7 +127,7 @@ app.post('/post/:id/downvote', (req, res) => {
   const id = parseInt(req.params.id);
   if (!req.session.voted) req.session.voted = {};
   if (req.session.voted[id]?.downvote) {
-    return res.send("<script>alert('이미 문추했습니다.'); history.back();</script>");
+    return res.send("<script>alert('이미 문추를 눌렀습니다!'); history.back();</script>");
   }
   const post = posts.find(p => p.id === id);
   if (post) {
@@ -164,7 +137,6 @@ app.post('/post/:id/downvote', (req, res) => {
   res.redirect(`/post/${id}`);
 });
 
-// 댓글 작성
 app.post('/comment/:id', (req, res) => {
   const id = parseInt(req.params.id);
   const { name, text } = req.body;
@@ -175,7 +147,6 @@ app.post('/comment/:id', (req, res) => {
   res.redirect(`/post/${id}`);
 });
 
-// 검색
 app.get('/search', (req, res) => {
   const keyword = (req.query.q || '').trim().toLowerCase();
   const page = parseInt(req.query.page) || 1;
@@ -198,7 +169,6 @@ app.get('/search', (req, res) => {
   });
 });
 
-// 삭제
 const ADMIN_PASSWORD = "doki3864";
 app.post('/delete/:id', (req, res) => {
   const id = parseInt(req.params.id);
@@ -210,7 +180,6 @@ app.post('/delete/:id', (req, res) => {
   res.redirect('/');
 });
 
-// 골념글
 app.get('/golnym', (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const golnymAll = posts.filter(p => p.upvotes >= 10);
@@ -229,7 +198,7 @@ app.get('/golnym', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`💀 해골방 갤러리 실행 중: http://localhost:${PORT}`);
+  console.log(`해골방 갤러리 실행 중: http://localhost:${PORT}`);
 });
 
 
