@@ -1,4 +1,4 @@
-// app.js
+// ✅ app.js 전체 완전 수정본
 const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
@@ -9,13 +9,14 @@ const path = require('path');
 
 const app = express();
 const upload = multer({ dest: 'uploads/' });
-const POSTS_PER_PAGE = 10;
 
 cloudinary.config({
   cloud_name: 'dd6xtxudi',
   api_key: '732873783656938',
   api_secret: 'D5CptXx43n1qBQjbGkQ7HTv1bqA'
 });
+
+const POSTS_PER_PAGE = 10;
 
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -59,19 +60,17 @@ app.locals.replaceEmotes = replaceEmotes;
 
 app.get('/', (req, res) => {
   const page = parseInt(req.query.page) || 1;
-  const totalPosts = posts.length;
-  const totalPages = Math.ceil(totalPosts / POSTS_PER_PAGE);
+  const totalPostCount = Array.isArray(posts) ? posts.length : 0;
+  const totalPages = Math.ceil(totalPostCount / POSTS_PER_PAGE);
   const startIdx = (page - 1) * POSTS_PER_PAGE;
-  const paginatedPosts = posts.slice(startIdx, startIdx + POSTS_PER_PAGE).map(post => ({
-    ...post,
-    safeTitle: replaceEmotes(post.title)
-  }));
+  const paginatedPosts = posts.slice(startIdx, startIdx + POSTS_PER_PAGE)
+    .map(post => ({ ...post, safeTitle: replaceEmotes(post.title || "") }));
 
   res.render('index', {
     posts: paginatedPosts,
     currentPage: page,
     totalPages,
-    totalPosts,
+    totalPosts: posts.length,
     searchQuery: ''
   });
 });
@@ -89,14 +88,14 @@ app.post('/write', upload.single('image'), async (req, res) => {
   });
 
   let imageUrl = null;
-  try {
-    if (req.file) {
+  if (req.file) {
+    try {
       const result = await cloudinary.uploader.upload(req.file.path);
       imageUrl = result.secure_url;
       fs.unlinkSync(req.file.path);
+    } catch (err) {
+      console.error("이미지 업로드 오류:", err);
     }
-  } catch (err) {
-    console.error("Cloudinary 업로드 오류:", err);
   }
 
   posts.unshift({
@@ -106,8 +105,8 @@ app.post('/write', upload.single('image'), async (req, res) => {
     author,
     createdAt: now,
     imageUrl,
-    safeTitle: replaceEmotes(title),
-    safeContent: replaceEmotes(content),
+    safeTitle: replaceEmotes(title || ""),
+    safeContent: replaceEmotes(content || ""),
     comments: [],
     upvotes: 0,
     downvotes: 0,
@@ -131,27 +130,29 @@ app.get('/post/:id', (req, res) => {
 
 app.post('/post/:id/upvote', (req, res) => {
   const id = parseInt(req.params.id);
-  const post = posts.find(p => p.id === id);
-  if (!post) return res.redirect(`/post/${id}`);
   if (!req.session.voted) req.session.voted = {};
   if (req.session.voted[id]?.upvote) {
     return res.send("<script>alert('이미 갈추를 눌렀습니다!'); history.back();</script>");
   }
-  post.upvotes++;
-  req.session.voted[id] = { ...(req.session.voted[id] || {}), upvote: true };
+  const post = posts.find(p => p.id === id);
+  if (post) {
+    post.upvotes++;
+    req.session.voted[id] = { ...req.session.voted[id], upvote: true };
+  }
   res.redirect(`/post/${id}`);
 });
 
 app.post('/post/:id/downvote', (req, res) => {
   const id = parseInt(req.params.id);
-  const post = posts.find(p => p.id === id);
-  if (!post) return res.redirect(`/post/${id}`);
   if (!req.session.voted) req.session.voted = {};
   if (req.session.voted[id]?.downvote) {
     return res.send("<script>alert('이미 문추를 눌렀습니다!'); history.back();</script>");
   }
-  post.downvotes++;
-  req.session.voted[id] = { ...(req.session.voted[id] || {}), downvote: true };
+  const post = posts.find(p => p.id === id);
+  if (post) {
+    post.downvotes++;
+    req.session.voted[id] = { ...req.session.voted[id], downvote: true };
+  }
   res.redirect(`/post/${id}`);
 });
 
@@ -160,7 +161,7 @@ app.post('/comment/:id', (req, res) => {
   const { name, text } = req.body;
   const post = posts.find(p => p.id === id);
   if (post) {
-    post.comments.push({ name, text, safeText: replaceEmotes(text) });
+    post.comments.push({ name, text, safeText: replaceEmotes(text || "") });
   }
   res.redirect(`/post/${id}`);
 });
@@ -175,10 +176,8 @@ app.get('/search', (req, res) => {
   );
   const totalPages = Math.ceil(matched.length / POSTS_PER_PAGE);
   const startIdx = (page - 1) * POSTS_PER_PAGE;
-  const paginatedPosts = matched.slice(startIdx, startIdx + POSTS_PER_PAGE).map(post => ({
-    ...post,
-    safeTitle: replaceEmotes(post.title)
-  }));
+  const paginatedPosts = matched.slice(startIdx, startIdx + POSTS_PER_PAGE)
+    .map(post => ({ ...post, safeTitle: replaceEmotes(post.title || "") }));
 
   res.render('search', {
     posts: paginatedPosts,
@@ -202,25 +201,23 @@ app.post('/delete/:id', (req, res) => {
 
 app.get('/golnym', (req, res) => {
   const page = parseInt(req.query.page) || 1;
-  const golnymPosts = posts.filter(p => p.upvotes >= 10);
-  const totalPages = Math.ceil(golnymPosts.length / POSTS_PER_PAGE);
+  const golnymAll = posts.filter(p => p.upvotes >= 10);
+  const totalPages = Math.ceil(golnymAll.length / POSTS_PER_PAGE);
   const startIdx = (page - 1) * POSTS_PER_PAGE;
-  const paginated = golnymPosts.slice(startIdx, startIdx + POSTS_PER_PAGE).map(post => ({
-    ...post,
-    safeTitle: replaceEmotes(post.title)
-  }));
+  const paginated = golnymAll.slice(startIdx, startIdx + POSTS_PER_PAGE)
+    .map(post => ({ ...post, safeTitle: replaceEmotes(post.title || "") }));
 
   res.render('golnym', {
     posts: paginated,
     currentPage: page,
     totalPages,
-    totalPosts: golnymPosts.length
+    totalPosts: golnymAll.length
   });
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`💀 해골방 갤러리 실행 중: http://localhost:${PORT}`);
+  console.log(`해골방 갤러리 실행 중: http://localhost:${PORT}`);
 });
 
 
