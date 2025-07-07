@@ -74,7 +74,7 @@ app.get('/', (req, res) => {
     totalPosts: posts.length,  // ← 이거 추가!
     searchQuery: ''
   });
-});
+})
 
 app.get('/write', (req, res) => {
   res.render('write');
