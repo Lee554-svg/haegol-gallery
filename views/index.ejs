@@ -49,9 +49,14 @@
       <th>작성시간</th>
       <th>👍 / 👎</th>
     </tr>
-    <% posts.forEach((post, idx) => { %>
-      <tr>
-        <td><%= totalPosts - ((currentPage - 1) * 10) - idx %></td>
+    <% 
+  const safeTotalPosts = typeof totalPosts !== 'undefined' ? totalPosts : 0;
+  const safeCurrentPage = typeof currentPage !== 'undefined' ? currentPage : 1;
+%>
+
+<% posts.forEach((post, idx) => { %>
+  <tr>
+    <td><%= safeTotalPosts - ((safeCurrentPage - 1) * 10) - idx %></td>
         <td style="text-align: left;">
           <% if (post.imageUrl) { %>
             <img src="<%= post.imageUrl %>" alt="post image" class="post-image" />
