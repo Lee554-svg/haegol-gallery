@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>해골방 갤러리</title>
+  <title>💀 해골방 갤러리</title>
   <style>
     body { font-family: "돋움", sans-serif; background: #f5f5f5; padding: 2em; }
     table { width: 100%; border-collapse: collapse; background: white; }
@@ -11,12 +11,18 @@
     a { text-decoration: none; color: #000; }
     .write-btn { margin: 1em 0; display: inline-block; }
     img.post-image { max-height: 50px; max-width: 50px; vertical-align: middle; margin-right: 10px; }
+    form.search-form { margin: 1em 0; }
   </style>
 </head>
 <body>
 
   <h1>💀 해골방 갤러리</h1>
   <a class="write-btn" href="/write">[글쓰기]</a>
+
+  <form class="search-form" method="GET" action="/search">
+    <input type="text" name="q" placeholder="검색어 입력" required />
+    <button type="submit">검색</button>
+  </form>
 
   <table>
     <tr>
@@ -44,6 +50,7 @@
 
 </body>
 </html>
+
 
 
 
