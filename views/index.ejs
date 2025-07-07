@@ -45,7 +45,8 @@
           <% if (post.imageUrl) { %>
             <img src="<%= post.imageUrl %>" alt="post image" class="post-image" />
           <% } %>
-          <a href="/post/<%= post.id %>"><%= post.title %></a>
+          <!-- 변환된 safeTitle로 출력 (HTML 해석됨) -->
+          <a href="/post/<%= post.id %>"><%- post.safeTitle %></a>
         </td>
         <td><%= post.author %></td>
         <td><%= post.createdAt %></td>
@@ -56,11 +57,3 @@
 
 </body>
 </html>
-
-
-
-
-
-
-
-
