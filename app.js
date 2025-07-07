@@ -25,11 +25,12 @@ app.use(session({
   saveUninitialized: true,
 }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use(express.static('public'));  // ← 디시콘 이미지 접근용
+app.use(express.static('public'));  // 디시콘 이미지 접근용
 
 let posts = [];
 
 function replaceEmotes(text) {
+  if (!text) return '';
   const emoteMap = {
     '(갈추)': 'galchu.jpeg',
     '(문추)': 'munchu.jpeg',
@@ -65,7 +66,10 @@ app.get('/', (req, res) => {
   const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
   const startIdx = (page - 1) * POSTS_PER_PAGE;
   const paginatedPosts = posts.slice(startIdx, startIdx + POSTS_PER_PAGE)
-    .map(post => ({ ...post, safeTitle: replaceEmotes(post.title) }));
+    .map(post => ({
+      ...post,
+      safeTitle: replaceEmotes(post.title)
+    }));
 
   res.render('index', {
     posts: paginatedPosts,
@@ -106,7 +110,9 @@ app.post('/write', upload.single('image'), async (req, res) => {
   posts.unshift({
     id: Date.now(),
     title,
+    safeTitle: replaceEmotes(title),
     content,
+    safeContent: replaceEmotes(content),
     author,
     createdAt: now,
     imageUrl,
@@ -129,6 +135,11 @@ app.get('/post/:id', (req, res) => {
     post.views++;
     req.session.viewed[id] = true;
   }
+
+  // 댓글도 safeText 처리
+  post.comments.forEach(comment => {
+    comment.safeText = replaceEmotes(comment.text);
+  });
 
   res.render('post', { post });
 });
@@ -170,7 +181,7 @@ app.post('/comment/:id', (req, res) => {
   const { name, text } = req.body;
   const post = posts.find(p => p.id === id);
   if (post) {
-    post.comments.push({ name, text });
+    post.comments.push({ name, text, safeText: replaceEmotes(text) });
   }
   res.redirect(`/post/${id}`);
 });
@@ -233,4 +244,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`해골방 갤러리 실행 중: http://localhost:${PORT}`);
 });
+
 
