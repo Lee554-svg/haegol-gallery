@@ -23,11 +23,11 @@ app.use(session({
   saveUninitialized: true,
 }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use(express.static('public'));  // ← 디시콘 이미지 접근용
+app.use(express.static('public'));  // 디시콘 접근
 
 let posts = [];
 
-// 🔥 디시콘 치환 함수
+// 🟡 디시콘 치환
 function replaceEmotes(text) {
   const emoteMap = {
     '(갈추)': 'galchu.jpeg',
@@ -48,7 +48,6 @@ function replaceEmotes(text) {
   };
 
   let safeText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
   for (const key in emoteMap) {
     const imgTag = `<img src="/emotes/${emoteMap[key]}" alt="${key}" style="height: 20px;" />`;
     const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -64,15 +63,31 @@ app.get('/', (req, res) => {
     ...post,
     safeTitle: replaceEmotes(post.title),
   }));
-  res.render('index', { posts: postsWithSafeTitle });
+  res.render('index', { posts: postsWithSafeTitle, searchQuery: '' });
 });
 
-// 글쓰기 페이지
+// 🔍 검색 (GET /search?q=키워드)
+app.get('/search', (req, res) => {
+  const keyword = (req.query.q || '').trim().toLowerCase();
+  if (!keyword) return res.render('search', { posts: [], keyword: '' });
+
+  const filtered = posts.filter(post =>
+    post.title.toLowerCase().includes(keyword) ||
+    post.content.toLowerCase().includes(keyword) ||
+    post.author.toLowerCase().includes(keyword)
+  ).map(post => ({
+    ...post,
+    safeTitle: replaceEmotes(post.title),
+  }));
+
+  res.render('search', { posts: filtered, keyword });
+});
+
+// 글쓰기
 app.get('/write', (req, res) => {
   res.render('write');
 });
 
-// 글쓰기 처리
 app.post('/write', upload.single('image'), async (req, res) => {
   const { title, content, author } = req.body;
   const now = new Date().toLocaleString('ko-KR', {
@@ -113,7 +128,7 @@ app.post('/write', upload.single('image'), async (req, res) => {
   res.redirect('/');
 });
 
-// 상세 페이지 (조회수 증가)
+// 상세보기 + 조회수 증가
 app.get('/post/:id', (req, res) => {
   const id = parseInt(req.params.id);
   const post = posts.find(p => p.id === id);
@@ -162,7 +177,7 @@ app.post('/post/:id/downvote', (req, res) => {
   res.redirect(`/post/${id}`);
 });
 
-// 댓글 작성
+// 댓글
 app.post('/comment/:id', (req, res) => {
   const id = parseInt(req.params.id);
   const { name, text } = req.body;
@@ -171,22 +186,6 @@ app.post('/comment/:id', (req, res) => {
     post.comments.push({ name, text });
   }
   res.redirect(`/post/${id}`);
-});
-
-app.post('/search', (req, res) => {
-  const keyword = req.body.keyword.trim().toLowerCase();
-  if (!keyword) return res.render('search', { posts: [], keyword: '' });
-
-  const filtered = posts.filter(post =>
-    post.title.toLowerCase().includes(keyword) ||
-    post.content.toLowerCase().includes(keyword) ||
-    post.author.toLowerCase().includes(keyword)
-  ).map(post => ({
-    ...post,
-    safeTitle: replaceEmotes(post.title),
-  }));
-
-  res.render('search', { posts: filtered, keyword });
 });
 
 // 삭제
@@ -202,6 +201,7 @@ app.post('/delete/:id', (req, res) => {
   res.redirect('/');
 });
 
+// 골념글
 app.get('/golnym', (req, res) => {
   const golnymPosts = posts
     .filter(p => p.upvotes >= 10)

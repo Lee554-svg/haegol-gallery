@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title><%= post.title %> - 해골방 갤러리</title>
+  <title><%- post.safeTitle %> - 해골방 갤러리</title>
   <style>
     body { font-family: "돋움", sans-serif; background: #f5f5f5; padding: 2em; max-width: 800px; margin: auto; }
     a { text-decoration: none; color: #000; }
@@ -15,7 +15,7 @@
 </head>
 <body>
 
-  <h1><%= post.title %></h1>
+  <h1><%- post.safeTitle %></h1>
   <p>작성자: <%= post.author %></p>
   <p>작성일: <%= post.createdAt %></p>
   <p>조회수: <%= post.views %></p>
@@ -24,8 +24,8 @@
     <img src="<%= post.imageUrl %>" alt="post image" class="post-image" />
   <% } %>
 
-  <!-- 디시콘 치환 함수로 치환한 게시글 내용 출력 -->
-  <p><%- replaceEmotes(post.content) %></p>
+  <!-- 디시콘 치환된 게시글 내용 출력 -->
+  <p><%- post.safeContent %></p>
 
   <hr />
 
@@ -45,7 +45,7 @@
     <h3>댓글 (<%= post.comments.length %>)</h3>
     <% post.comments.forEach(comment => { %>
       <div class="comment">
-        <strong><%= comment.name %></strong>: <%- replaceEmotes(comment.text) %>
+        <strong><%= comment.name %></strong>: <%- comment.safeText %>
       </div>
     <% }) %>
   </div>
@@ -63,6 +63,7 @@
 
 </body>
 </html>
+
 
 
 
