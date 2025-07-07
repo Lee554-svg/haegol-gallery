@@ -32,7 +32,7 @@
 
   <h1>💀 해골방 갤러리</h1>
 
-  <!-- 검색 폼 -->
+  <!-- 검색 -->
   <form class="search-form" action="/search" method="GET">
     <input type="text" name="q" placeholder="검색어 입력" value="<%= searchQuery || '' %>" />
     <button type="submit" class="search-btn">검색</button>
@@ -47,11 +47,11 @@
       <th>제목</th>
       <th>작성자</th>
       <th>작성시간</th>
-      <th>👍 갈추 / 👎 문추</th>
+      <th>👍 / 👎</th>
     </tr>
     <% posts.forEach((post, idx) => { %>
       <tr>
-        <td><%= totalPosts - ((currentPage - 1) * POSTS_PER_PAGE) - idx %></td>
+        <td><%= totalPosts - ((currentPage - 1) * 10) - idx %></td>
         <td style="text-align: left;">
           <% if (post.imageUrl) { %>
             <img src="<%= post.imageUrl %>" alt="post image" class="post-image" />
@@ -65,22 +65,22 @@
     <% }) %>
   </table>
 
-  <!-- ✅ 페이지네이션 -->
-   <div class="pagination">
-  <% if (totalPages > 1) { %>
-    <% for (let i = 1; i <= totalPages; i++) { %>
-      <% if (i === currentPage) { %>
-        <strong>[<%= i %>]</strong>
-      <% } else { %>
-        <a href="/?page=<%= i %>">[<%= i %>]</a>
+  <!-- 페이지네이션 -->
+  <div class="pagination">
+    <% if (totalPages > 1) { %>
+      <% for (let i = 1; i <= totalPages; i++) { %>
+        <% if (i === currentPage) { %>
+          <strong>[<%= i %>]</strong>
+        <% } else { %>
+          <a href="/?page=<%= i %>">[<%= i %>]</a>
+        <% } %>
       <% } %>
     <% } %>
-  <% } %>
-</div>
-
+  </div>
 
 </body>
 </html>
+
 
 
 
