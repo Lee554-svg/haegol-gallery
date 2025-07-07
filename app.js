@@ -71,6 +71,7 @@ app.get('/', (req, res) => {
     posts: paginatedPosts,
     currentPage: page,
     totalPages,
+    totalPosts: posts.length,  // ← 이거 추가!
     searchQuery: ''
   });
 });
