@@ -49,7 +49,7 @@ function replaceEmotes(text) {
   let safeText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
   for (const key in emoteMap) {
     const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const imgTag = `<img src="/emotes/${emoteMap[key]}" style="height: 32px;" />`;
+    const imgTag = `<img src="/emotes/${emoteMap[key]}" style="height: 50px;" />`;
     safeText = safeText.replace(new RegExp(escapedKey, 'g'), imgTag);
   }
   return safeText;
