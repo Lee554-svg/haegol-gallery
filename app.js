@@ -7,16 +7,14 @@ const fs = require('fs');
 const path = require('path');
 
 const app = express();
-const upload = multer({ dest: 'uploads/' }); // 임시 업로드 폴더
+const upload = multer({ dest: 'uploads/' });
 
-// Cloudinary 설정
 cloudinary.config({
   cloud_name: 'dd6xtxudi',
   api_key: '732873783656938',
   api_secret: 'D5CptXx43n1qBQjbGkQ7HTv1bqA'
 });
 
-// 기본 설정
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(session({
@@ -25,8 +23,41 @@ app.use(session({
   saveUninitialized: true,
 }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(express.static('public'));  // ← 디시콘 이미지 접근용
 
 let posts = [];
+
+// 🔥 디시콘 치환 함수
+function replaceEmotes(text) {
+  const emoteMap = {
+    '(갈추)': 'galchu.jpeg',
+    '(문추)': 'munchu.jpeg',
+    '(영정경고)': 'jeolim.jpeg',
+    '(세벤각)': 'wow.jpeg',
+    '(단약)': 'nope.jpeg',
+    '(욕)': 'sad.jpeg',
+    '(대해골)': 'angry.jpeg',
+    '(세팸)': 'hmm.jpeg',
+    '(해팸)': 'haha.jpeg',
+    '(조선전쟁)': 'noidea.jpeg',
+    '(볼살)': 'thinking.jpeg',
+    '(갈팸)': 'good.jpeg',
+    '(탈모)': 'shock.jpeg',
+    '(니디티)': 'yes.jpeg',
+    '(그긴거)': 'no.jpeg'
+  };
+
+  let safeText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  for (const key in emoteMap) {
+    const imgTag = `<img src="/emotes/${emoteMap[key]}" alt="${key}" style="height: 20px;" />`;
+    const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    safeText = safeText.replace(new RegExp(escapedKey, 'g'), imgTag);
+  }
+
+  return safeText;
+}
+app.locals.replaceEmotes = replaceEmotes;
 
 // 메인 페이지
 app.get('/', (req, res) => {
@@ -38,7 +69,7 @@ app.get('/write', (req, res) => {
   res.render('write');
 });
 
-// 글쓰기 처리 (이미지 업로드 포함)
+// 글쓰기 처리
 app.post('/write', upload.single('image'), async (req, res) => {
   const { title, content, author } = req.body;
   const now = new Date().toLocaleString('ko-KR', {
@@ -79,7 +110,7 @@ app.post('/write', upload.single('image'), async (req, res) => {
   res.redirect('/');
 });
 
-// 글 상세 보기 + 조회수 증가
+// 상세 페이지 (조회수 증가)
 app.get('/post/:id', (req, res) => {
   const id = parseInt(req.params.id);
   const post = posts.find(p => p.id === id);
@@ -94,7 +125,7 @@ app.get('/post/:id', (req, res) => {
   res.render('post', { post });
 });
 
-// 갈추(좋아요)
+// 갈추
 app.post('/post/:id/upvote', (req, res) => {
   const id = parseInt(req.params.id);
   if (!req.session.voted) req.session.voted = {};
@@ -111,7 +142,7 @@ app.post('/post/:id/upvote', (req, res) => {
   res.redirect(`/post/${id}`);
 });
 
-// 문추(싫어요)
+// 문추
 app.post('/post/:id/downvote', (req, res) => {
   const id = parseInt(req.params.id);
   if (!req.session.voted) req.session.voted = {};
@@ -139,12 +170,11 @@ app.post('/comment/:id', (req, res) => {
   res.redirect(`/post/${id}`);
 });
 
-// 검색 폼
+// 검색
 app.get('/search', (req, res) => {
   res.render('search', { posts: [], keyword: '' });
 });
 
-// 검색 처리
 app.post('/search', (req, res) => {
   const keyword = req.body.keyword.trim().toLowerCase();
   if (!keyword) return res.render('search', { posts: [], keyword: '' });
@@ -158,7 +188,7 @@ app.post('/search', (req, res) => {
   res.render('search', { posts: filtered, keyword });
 });
 
-// 글 삭제
+// 삭제
 const ADMIN_PASSWORD = "doki3864";
 app.post('/delete/:id', (req, res) => {
   const id = parseInt(req.params.id);
@@ -171,13 +201,13 @@ app.post('/delete/:id', (req, res) => {
   res.redirect('/');
 });
 
-// 골념글 페이지 (갈추 10개 이상)
+// 골념글 (갈추 10개 이상)
 app.get('/golnym', (req, res) => {
   const golnymPosts = posts.filter(p => p.upvotes >= 10);
   res.render('golnym', { posts: golnymPosts });
 });
 
-// 서버 시작
+// 서버 실행
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`해골방 갤러리 실행 중: http://localhost:${PORT}`);
