@@ -25,7 +25,7 @@ app.use(session({
   saveUninitialized: true,
 }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use(express.static('public'));  // ← 디시콘 이미지 접근용
+app.use(express.static('public'));
 
 let posts = [];
 
@@ -110,6 +110,8 @@ app.post('/write', upload.single('image'), async (req, res) => {
     author,
     createdAt: now,
     imageUrl,
+    safeTitle: replaceEmotes(title),
+    safeContent: replaceEmotes(content),
     comments: [],
     upvotes: 0,
     downvotes: 0,
@@ -170,7 +172,7 @@ app.post('/comment/:id', (req, res) => {
   const { name, text } = req.body;
   const post = posts.find(p => p.id === id);
   if (post) {
-    post.comments.push({ name, text });
+    post.comments.push({ name, text, safeText: replaceEmotes(text) });
   }
   res.redirect(`/post/${id}`);
 });
@@ -233,5 +235,6 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`해골방 갤러리 실행 중: http://localhost:${PORT}`);
 });
+
 
 
