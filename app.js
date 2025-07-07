@@ -66,14 +66,14 @@ app.get('/', (req, res) => {
   const paginatedPosts = posts.slice(startIdx, startIdx + POSTS_PER_PAGE)
     .map(post => ({ ...post, safeTitle: replaceEmotes(post.title) }));
 
- res.render('index', {
-   posts: paginatedPosts,
-   currentPage: page,
-   totalPages,
-   totalPosts: posts.length,
-   searchQuery: ''
- });
-
+  res.render('index', {
+    posts: paginatedPosts,
+    currentPage: page,
+    totalPages,
+    totalPosts: posts.length,
+    searchQuery: ''
+  });
+}); // ✅ 이거 빠졌었음!!
 
 app.get('/write', (req, res) => {
   res.render('write');
