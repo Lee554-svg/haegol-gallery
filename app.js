@@ -171,6 +171,12 @@ app.post('/delete/:id', (req, res) => {
   res.redirect('/');
 });
 
+// 골념글 페이지 (갈추 10개 이상)
+app.get('/golnym', (req, res) => {
+  const golnymPosts = posts.filter(p => p.upvotes >= 10);
+  res.render('golnym', { posts: golnymPosts });
+});
+
 // 서버 시작
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
