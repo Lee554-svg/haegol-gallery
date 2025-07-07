@@ -38,6 +38,12 @@
     <button type="submit">👎 문추 (<%= post.downvotes %>)</button>
   </form>
 
+<!-- 글 삭제 폼 (관리자 비밀번호 필요) -->
+<form action="/delete/<%= post.id %>" method="POST" onsubmit="return confirm('정말 삭제하시겠습니까?')">
+  <input type="password" name="adminPassword" placeholder="관리자 비밀번호" required />
+  <button type="submit">글 삭제</button>
+</form>
+
   <hr />
 
   <!-- 댓글 목록 -->
