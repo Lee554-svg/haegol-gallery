@@ -24,7 +24,6 @@
     <img src="<%= post.imageUrl %>" alt="post image" class="post-image" />
   <% } %>
 
-  <!-- 디시콘 치환된 게시글 내용 출력 -->
   <p><%- post.safeContent %></p>
 
   <hr />
@@ -38,15 +37,14 @@
     <button type="submit">👎 문추 (<%= post.downvotes %>)</button>
   </form>
 
-<!-- 글 삭제 폼 (관리자 비밀번호 필요) -->
-<form action="/delete/<%= post.id %>" method="POST" onsubmit="return confirm('정말 삭제하시겠습니까?')">
-  <input type="password" name="adminPassword" placeholder="관리자 비밀번호" required />
-  <button type="submit">글 삭제</button>
-</form>
+  <form action="/delete/<%= post.id %>" method="POST" onsubmit="return confirm('삭제할거야?')">
+    <input type="password" name="adminPassword" placeholder="관리자 비번" required />
+    <button type="submit">삭제</button>
+  </form>
 
   <hr />
 
-  <!-- 댓글 목록 -->
+  <!-- 댓글 -->
   <div class="comments">
     <h3>댓글 (<%= post.comments.length %>)</h3>
     <% post.comments.forEach(comment => { %>
@@ -56,19 +54,19 @@
     <% }) %>
   </div>
 
-  <!-- 댓글 작성 폼 -->
-  <form action="/comment/<%= post.id %>" method="POST" style="margin-top:1em;">
+  <form action="/comment/<%= post.id %>" method="POST">
     <input type="text" name="name" placeholder="이름" required />
     <br />
-    <textarea name="text" placeholder="댓글 내용을 입력하세요" required></textarea>
+    <textarea name="text" placeholder="댓글" required></textarea>
     <br />
     <button type="submit">댓글 작성</button>
   </form>
 
-  <p><a href="/">← 글 목록으로</a></p>
+  <p><a href="/">← 목록</a></p>
 
 </body>
 </html>
+
 
 
 
