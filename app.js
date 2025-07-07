@@ -32,19 +32,19 @@ function replaceEmotes(text) {
   const emoteMap = {
     '(갈추)': 'galchu.jpeg',
     '(문추)': 'munchu.jpeg',
-    '(영정경고)': 'jeolim.jpeg',
-    '(세벤각)': 'wow.jpeg',
-    '(단약)': 'nope.jpeg',
-    '(욕)': 'sad.jpeg',
-    '(대해골)': 'angry.jpeg',
-    '(세팸)': 'hmm.jpeg',
-    '(해팸)': 'haha.jpeg',
-    '(조선전쟁)': 'noidea.jpeg',
-    '(볼살)': 'thinking.jpeg',
-    '(갈팸)': 'good.jpeg',
-    '(탈모)': 'shock.jpeg',
-    '(니디티)': 'yes.jpeg',
-    '(그긴거)': 'no.jpeg'
+    '(영정경고)': 'mun.jpeg',
+    '(세벤각)': 'saban.jpeg',
+    '(단약)': 'dan.jpeg',
+    '(욕)': 'galmun.jpeg',
+    '(대해골)': 'bone.jpeg',
+    '(세팸)': 'sepam.jpeg',
+    '(해팸)': 'hapam.jpeg',
+    '(조선전쟁)': 'jo.jpeg',
+    '(볼살)': 'bol.jpeg',
+    '(갈팸)': 'galpam.jpeg',
+    '(탈모)': 'egg.jpeg',
+    '(니디티)': 'niditi.jpeg',
+    '(그긴거)': 'wa.jpeg'
   };
 
   let safeText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
