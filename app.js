@@ -1,9 +1,7 @@
-// app.js
-require('dotenv').config();
-const mongoose = require('mongoose');
 const express = require('express');
-const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 const session = require('express-session');
+const bodyParser = require('body-parser');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
@@ -11,25 +9,46 @@ const path = require('path');
 
 const app = express();
 const upload = multer({ dest: 'uploads/' });
+const POSTS_PER_PAGE = 10;
+const ADMIN_PASSWORD = "doki3864";
+
+// ✅ MongoDB URI 직접 박음
+const MONGODB_URI = "너의_몽고DB_Atlas_주소";
+
+mongoose.connect(MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+}).then(() => console.log("✅ MongoDB 연결됨"))
+  .catch(err => console.error("❌ MongoDB 연결 실패", err));
+
+// ✅ 모델 정의 (분리 X)
+const commentSchema = new mongoose.Schema({
+  name: String,
+  text: String,
+  safeText: String
+});
+
+const postSchema = new mongoose.Schema({
+  title: String,
+  content: String,
+  author: String,
+  createdAt: String,
+  imageUrl: String,
+  safeTitle: String,
+  safeContent: String,
+  comments: [commentSchema],
+  upvotes: Number,
+  downvotes: Number,
+  views: Number
+});
+
+const Post = mongoose.model('Post', postSchema);
 
 cloudinary.config({
   cloud_name: 'dd6xtxudi',
   api_key: '732873783656938',
   api_secret: 'D5CptXx43n1qBQjbGkQ7HTv1bqA'
 });
-
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => {
-  console.log('✅ MongoDB 연결 성공');
-}).catch((err) => {
-  console.error('❌ MongoDB 연결 실패:', err);
-});
-
-const Post = require('./models/Post'); // 아래에 정의해둘 것
-const POSTS_PER_PAGE = 10;
-const ADMIN_PASSWORD = "doki3864";
 
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -65,7 +84,7 @@ function replaceEmotes(text) {
 }
 app.locals.replaceEmotes = replaceEmotes;
 
-// 📜 index
+// ✅ index
 app.get('/', async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const totalPosts = await Post.countDocuments({});
@@ -84,43 +103,38 @@ app.get('/', async (req, res) => {
   });
 });
 
-// ✏️ 글쓰기
+// ✅ 글쓰기
 app.get('/write', (req, res) => res.render('write'));
 
 app.post('/write', upload.single('image'), async (req, res) => {
-  try {
-    const { title, content, author } = req.body;
-    let imageUrl = null;
+  const { title, content, author } = req.body;
+  let imageUrl = null;
 
-    if (req.file) {
-      const result = await cloudinary.uploader.upload(req.file.path);
-      imageUrl = result.secure_url;
-      fs.unlinkSync(req.file.path);
-    }
-
-    const newPost = new Post({
-      title,
-      content,
-      author,
-      createdAt: new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
-      imageUrl,
-      safeTitle: replaceEmotes(title),
-      safeContent: replaceEmotes(content),
-      comments: [],
-      upvotes: 0,
-      downvotes: 0,
-      views: 0
-    });
-
-    await newPost.save();
-    res.redirect('/');
-  } catch (err) {
-    console.error("글 등록 오류:", err);
-    res.status(500).send("글 등록 중 오류 발생");
+  if (req.file) {
+    const result = await cloudinary.uploader.upload(req.file.path);
+    imageUrl = result.secure_url;
+    fs.unlinkSync(req.file.path);
   }
+
+  const newPost = new Post({
+    title,
+    content,
+    author,
+    createdAt: new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
+    imageUrl,
+    safeTitle: replaceEmotes(title),
+    safeContent: replaceEmotes(content),
+    comments: [],
+    upvotes: 0,
+    downvotes: 0,
+    views: 0
+  });
+
+  await newPost.save();
+  res.redirect('/');
 });
 
-// 📄 글 상세
+// ✅ 게시글 보기
 app.get('/post/:id', async (req, res) => {
   const post = await Post.findById(req.params.id);
   if (!post) return res.status(404).send("글 없음");
@@ -135,7 +149,7 @@ app.get('/post/:id', async (req, res) => {
   res.render('post', { post });
 });
 
-// 👍👎 투표
+// ✅ 투표
 app.post('/post/:id/upvote', async (req, res) => {
   const post = await Post.findById(req.params.id);
   if (!post) return res.redirect('/');
@@ -158,7 +172,7 @@ app.post('/post/:id/downvote', async (req, res) => {
   res.redirect(`/post/${post.id}`);
 });
 
-// 💬 댓글
+// ✅ 댓글
 app.post('/comment/:id', async (req, res) => {
   const { name, text } = req.body;
   const post = await Post.findById(req.params.id);
@@ -168,36 +182,22 @@ app.post('/comment/:id', async (req, res) => {
   res.redirect(`/post/${post.id}`);
 });
 
-// 🔍 검색
-app.get('/search', async (req, res) => {
-  const keyword = (req.query.q || '').toLowerCase();
+// ✅ 골념글
+app.get('/golnym', async (req, res) => {
   const page = parseInt(req.query.page) || 1;
+  const all = await Post.find({ upvotes: { $gte: 10 } }).sort({ createdAt: -1 });
+  const totalPages = Math.ceil(all.length / POSTS_PER_PAGE);
+  const paginated = all.slice((page - 1) * POSTS_PER_PAGE, page * POSTS_PER_PAGE);
 
-  const query = {
-    $or: [
-      { title: { $regex: keyword, $options: 'i' } },
-      { content: { $regex: keyword, $options: 'i' } },
-      { author: { $regex: keyword, $options: 'i' } }
-    ]
-  };
-
-  const totalPosts = await Post.countDocuments(query);
-  const totalPages = Math.ceil(totalPosts / POSTS_PER_PAGE);
-  const posts = await Post.find(query)
-    .sort({ createdAt: -1 })
-    .skip((page - 1) * POSTS_PER_PAGE)
-    .limit(POSTS_PER_PAGE);
-
-  res.render('search', {
-    posts,
-    keyword: req.query.q,
+  res.render('golnym', {
+    posts: paginated,
     currentPage: page,
     totalPages,
-    totalPosts
+    totalPosts: all.length
   });
 });
 
-// ❌ 삭제
+// ✅ 삭제
 app.post('/delete/:id', async (req, res) => {
   const { adminPassword } = req.body;
   if (adminPassword !== ADMIN_PASSWORD) return res.send("<script>alert('비번 틀림'); history.back();</script>");
@@ -205,29 +205,5 @@ app.post('/delete/:id', async (req, res) => {
   res.redirect('/');
 });
 
-// 🔥 골념글
-app.get('/golnym', async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-
-  const golnymAll = await Post.find({ upvotes: { $gte: 10 } }).sort({ createdAt: -1 });
-  const totalPages = Math.ceil(golnymAll.length / POSTS_PER_PAGE);
-  const paginated = golnymAll.slice((page - 1) * POSTS_PER_PAGE, page * POSTS_PER_PAGE);
-
-  res.render('golnym', {
-    posts: paginated,
-    currentPage: page,
-    totalPages,
-    totalPosts: golnymAll.length
-  });
-});
-
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`✅ 서버 실행됨: http://localhost:${PORT}`);
-});
-
-
-
-
-
-
+app.listen(PORT, () => console.log(`✅ 서버 실행됨 http://localhost:${PORT}`));
