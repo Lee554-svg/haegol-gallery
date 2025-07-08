@@ -13,7 +13,8 @@ const POSTS_PER_PAGE = 10;
 const ADMIN_PASSWORD = "doki3864";
 
 // ✅ MongoDB URI 직접 박음
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://mumyoung1144:wQ7SVnpqcg1300mQ@cluster0.mongodb.net/haegol-gallery?retryWrites=true&w=majority";
+// ✅ 이 코드로 수정
+const MONGODB_URI = process.env.MONGODB_URI;
 
 mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
