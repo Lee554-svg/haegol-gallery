@@ -19,6 +19,15 @@ cloudinary.config({
   api_secret: 'D5CptXx43n1qBQjbGkQ7HTv1bqA'
 });
 
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+}).then(() => {
+  console.log('✅ MongoDB 연결 성공');
+}).catch((err) => {
+  console.error('❌ MongoDB 연결 실패:', err);
+});
+
 const POSTS_PER_PAGE = 10;
 const ADMIN_PASSWORD = "doki3864";
 
