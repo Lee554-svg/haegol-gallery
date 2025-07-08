@@ -15,12 +15,12 @@ const ADMIN_PASSWORD = "doki3864";
 // ✅ MongoDB URI 직접 박음
 // ✅ 이 코드로 수정
 const MONGODB_URI = process.env.MONGODB_URI;
-
 mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
-}).then(() => console.log("✅ MongoDB 연결됨"))
-  .catch(err => console.error("❌ MongoDB 연결 실패", err));
+})
+.then(() => console.log("✅ MongoDB 연결됨"))
+.catch(err => console.error("❌ MongoDB 연결 실패", err));
 
 // ✅ 모델 정의 (분리 X)
 const commentSchema = new mongoose.Schema({
