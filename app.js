@@ -37,7 +37,7 @@ app.use(session({ secret: 'secret', resave: false, saveUninitialized: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static('public'));
 
-let posts = [];
+const Post = require('./models/Post');
 
 function replaceEmotes(text) {
   const emoteMap = {
