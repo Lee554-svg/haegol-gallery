@@ -13,7 +13,7 @@ const POSTS_PER_PAGE = 10;
 const ADMIN_PASSWORD = "doki3864";
 
 // ✅ MongoDB URI 직접 박음
-const MONGODB_URI = "mongodb+srv://mumyoung1144:doki3864@cluster0.4p9segt.mongodb.net/haegol-gallery?retryWrites=true&w=majority&appName=Cluster0";
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://mumyoung1144:wQ7SVnpqcg1300mQ@cluster0.mongodb.net/haegol-gallery?retryWrites=true&w=majority";
 
 mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
