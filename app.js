@@ -1,4 +1,7 @@
 // ⬇ app.js 전체
+// 맨 위에 추가
+require('dotenv').config();
+const mongoose = require('mongoose');
 const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
