@@ -7,6 +7,8 @@ const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
 const path = require('path');
 
+const Post = require('./models/Post');
+
 const app = express();
 const upload = multer({ dest: 'uploads/' });
 const POSTS_PER_PAGE = 10;
