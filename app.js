@@ -1,5 +1,4 @@
-// ⬇ app.js 전체
-// 맨 위에 추가
+// app.js
 require('dotenv').config();
 const mongoose = require('mongoose');
 const express = require('express');
@@ -28,6 +27,7 @@ mongoose.connect(process.env.MONGODB_URI, {
   console.error('❌ MongoDB 연결 실패:', err);
 });
 
+const Post = require('./models/Post'); // 아래에 정의해둘 것
 const POSTS_PER_PAGE = 10;
 const ADMIN_PASSWORD = "doki3864";
 
@@ -36,8 +36,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(session({ secret: 'secret', resave: false, saveUninitialized: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static('public'));
-
-const Post = require('./models/Post');
 
 function replaceEmotes(text) {
   const emoteMap = {
@@ -60,27 +58,25 @@ function replaceEmotes(text) {
 
   let safeText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
   for (const key in emoteMap) {
-    const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const imgTag = `<img src="/emotes/${emoteMap[key]}" style="height: 50px;" />`;
-    safeText = safeText.replace(new RegExp(escapedKey, 'g'), imgTag);
+    safeText = safeText.replace(new RegExp(key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), imgTag);
   }
   return safeText;
 }
 app.locals.replaceEmotes = replaceEmotes;
 
-// ✅ index route
-app.get('/', (req, res) => {
+// 📜 index
+app.get('/', async (req, res) => {
   const page = parseInt(req.query.page) || 1;
-  const totalPosts = posts.length;
+  const totalPosts = await Post.countDocuments({});
   const totalPages = Math.ceil(totalPosts / POSTS_PER_PAGE);
-  const start = (page - 1) * POSTS_PER_PAGE;
-  const paginatedPosts = posts.slice(start, start + POSTS_PER_PAGE).map(post => ({
-    ...post,
-    safeTitle: replaceEmotes(post.title)
-  }));
+  const posts = await Post.find({})
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * POSTS_PER_PAGE)
+    .limit(POSTS_PER_PAGE);
 
   res.render('index', {
-    posts: paginatedPosts,
+    posts,
     currentPage: page,
     totalPages,
     totalPosts,
@@ -88,13 +84,12 @@ app.get('/', (req, res) => {
   });
 });
 
-// ✅ 글쓰기
+// ✏️ 글쓰기
 app.get('/write', (req, res) => res.render('write'));
 
 app.post('/write', upload.single('image'), async (req, res) => {
   try {
     const { title, content, author } = req.body;
-    const now = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
     let imageUrl = null;
 
     if (req.file) {
@@ -103,12 +98,11 @@ app.post('/write', upload.single('image'), async (req, res) => {
       fs.unlinkSync(req.file.path);
     }
 
-    posts.unshift({
-      id: Date.now(),
+    const newPost = new Post({
       title,
       content,
       author,
-      createdAt: now,
+      createdAt: new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
       imageUrl,
       safeTitle: replaceEmotes(title),
       safeContent: replaceEmotes(content),
@@ -118,6 +112,7 @@ app.post('/write', upload.single('image'), async (req, res) => {
       views: 0
     });
 
+    await newPost.save();
     res.redirect('/');
   } catch (err) {
     console.error("글 등록 오류:", err);
@@ -125,98 +120,98 @@ app.post('/write', upload.single('image'), async (req, res) => {
   }
 });
 
-// ✅ post 보기
-app.get('/post/:id', (req, res) => {
-  const id = parseInt(req.params.id);
-  const post = posts.find(p => p.id === id);
+// 📄 글 상세
+app.get('/post/:id', async (req, res) => {
+  const post = await Post.findById(req.params.id);
   if (!post) return res.status(404).send("글 없음");
 
   if (!req.session.viewed) req.session.viewed = {};
-  if (!req.session.viewed[id]) {
+  if (!req.session.viewed[post.id]) {
     post.views++;
-    req.session.viewed[id] = true;
+    req.session.viewed[post.id] = true;
+    await post.save();
   }
 
   res.render('post', { post });
 });
 
-// ✅ 투표
-app.post('/post/:id/upvote', (req, res) => {
-  const id = parseInt(req.params.id);
-  const post = posts.find(p => p.id === id);
+// 👍👎 투표
+app.post('/post/:id/upvote', async (req, res) => {
+  const post = await Post.findById(req.params.id);
   if (!post) return res.redirect('/');
   if (!req.session.voted) req.session.voted = {};
-  if (req.session.voted[id]?.upvote) return res.send("<script>alert('이미 갈추함'); history.back();</script>");
+  if (req.session.voted[post.id]?.upvote) return res.send("<script>alert('이미 갈추함'); history.back();</script>");
   post.upvotes++;
-  req.session.voted[id] = { ...(req.session.voted[id] || {}), upvote: true };
-  res.redirect(`/post/${id}`);
+  req.session.voted[post.id] = { ...(req.session.voted[post.id] || {}), upvote: true };
+  await post.save();
+  res.redirect(`/post/${post.id}`);
 });
 
-app.post('/post/:id/downvote', (req, res) => {
-  const id = parseInt(req.params.id);
-  const post = posts.find(p => p.id === id);
+app.post('/post/:id/downvote', async (req, res) => {
+  const post = await Post.findById(req.params.id);
   if (!post) return res.redirect('/');
   if (!req.session.voted) req.session.voted = {};
-  if (req.session.voted[id]?.downvote) return res.send("<script>alert('이미 문추함'); history.back();</script>");
+  if (req.session.voted[post.id]?.downvote) return res.send("<script>alert('이미 문추함'); history.back();</script>");
   post.downvotes++;
-  req.session.voted[id] = { ...(req.session.voted[id] || {}), downvote: true };
-  res.redirect(`/post/${id}`);
+  req.session.voted[post.id] = { ...(req.session.voted[post.id] || {}), downvote: true };
+  await post.save();
+  res.redirect(`/post/${post.id}`);
 });
 
-// ✅ 댓글
-app.post('/comment/:id', (req, res) => {
-  const id = parseInt(req.params.id);
+// 💬 댓글
+app.post('/comment/:id', async (req, res) => {
   const { name, text } = req.body;
-  const post = posts.find(p => p.id === id);
+  const post = await Post.findById(req.params.id);
   if (!post) return res.redirect('/');
   post.comments.push({ name, text, safeText: replaceEmotes(text) });
-  res.redirect(`/post/${id}`);
+  await post.save();
+  res.redirect(`/post/${post.id}`);
 });
 
-// ✅ 검색
-app.get('/search', (req, res) => {
+// 🔍 검색
+app.get('/search', async (req, res) => {
   const keyword = (req.query.q || '').toLowerCase();
   const page = parseInt(req.query.page) || 1;
-  const matched = posts.filter(p =>
-    p.title.toLowerCase().includes(keyword) ||
-    p.content.toLowerCase().includes(keyword) ||
-    p.author.toLowerCase().includes(keyword)
-  );
-  const totalPages = Math.ceil(matched.length / POSTS_PER_PAGE);
-  const startIdx = (page - 1) * POSTS_PER_PAGE;
-  const paginatedPosts = matched.slice(startIdx, startIdx + POSTS_PER_PAGE).map(post => ({
-    ...post,
-    safeTitle: replaceEmotes(post.title)
-  }));
+
+  const query = {
+    $or: [
+      { title: { $regex: keyword, $options: 'i' } },
+      { content: { $regex: keyword, $options: 'i' } },
+      { author: { $regex: keyword, $options: 'i' } }
+    ]
+  };
+
+  const totalPosts = await Post.countDocuments(query);
+  const totalPages = Math.ceil(totalPosts / POSTS_PER_PAGE);
+  const posts = await Post.find(query)
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * POSTS_PER_PAGE)
+    .limit(POSTS_PER_PAGE);
 
   res.render('search', {
-    posts: paginatedPosts,
+    posts,
     keyword: req.query.q,
     currentPage: page,
     totalPages,
-    totalPosts: matched.length
+    totalPosts
   });
 });
 
-// ✅ 삭제
-app.post('/delete/:id', (req, res) => {
-  const id = parseInt(req.params.id);
+// ❌ 삭제
+app.post('/delete/:id', async (req, res) => {
   const { adminPassword } = req.body;
   if (adminPassword !== ADMIN_PASSWORD) return res.send("<script>alert('비번 틀림'); history.back();</script>");
-  posts = posts.filter(p => p.id !== id);
+  await Post.findByIdAndDelete(req.params.id);
   res.redirect('/');
 });
 
-// ✅ 골념글
-app.get('/golnym', (req, res) => {
+// 🔥 골념글
+app.get('/golnym', async (req, res) => {
   const page = parseInt(req.query.page) || 1;
-  const golnymAll = posts.filter(p => p.upvotes >= 10);
+
+  const golnymAll = await Post.find({ upvotes: { $gte: 10 } }).sort({ createdAt: -1 });
   const totalPages = Math.ceil(golnymAll.length / POSTS_PER_PAGE);
-  const startIdx = (page - 1) * POSTS_PER_PAGE;
-  const paginated = golnymAll.slice(startIdx, startIdx + POSTS_PER_PAGE).map(post => ({
-    ...post,
-    safeTitle: replaceEmotes(post.title)
-  }));
+  const paginated = golnymAll.slice((page - 1) * POSTS_PER_PAGE, page * POSTS_PER_PAGE);
 
   res.render('golnym', {
     posts: paginated,
@@ -230,6 +225,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`✅ 서버 실행됨: http://localhost:${PORT}`);
 });
+
 
 
 
