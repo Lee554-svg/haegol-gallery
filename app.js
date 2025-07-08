@@ -13,7 +13,7 @@ const POSTS_PER_PAGE = 10;
 const ADMIN_PASSWORD = "doki3864";
 
 // ✅ MongoDB URI 직접 박음
-const MONGODB_URI = "너의_몽고DB_Atlas_주소";
+const MONGODB_URI = "mongodb+srv://mumyoung1144:doki3864@cluster0.4p9segt.mongodb.net/haegol-gallery?retryWrites=true&w=majority&appName=Cluster0";
 
 mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
