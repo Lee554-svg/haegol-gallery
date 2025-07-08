@@ -12,38 +12,7 @@ const upload = multer({ dest: 'uploads/' });
 const POSTS_PER_PAGE = 10;
 const ADMIN_PASSWORD = "doki3864";
 
-// ✅ MongoDB URI 직접 박음
-// ✅ 이 코드로 수정
-const MONGODB_URI = process.env.MONGODB_URI;
-mongoose.connect(MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log("✅ MongoDB 연결됨"))
-.catch(err => console.error("❌ MongoDB 연결 실패", err));
 
-// ✅ 모델 정의 (분리 X)
-const commentSchema = new mongoose.Schema({
-  name: String,
-  text: String,
-  safeText: String
-});
-
-const postSchema = new mongoose.Schema({
-  title: String,
-  content: String,
-  author: String,
-  createdAt: String,
-  imageUrl: String,
-  safeTitle: String,
-  safeContent: String,
-  comments: [commentSchema],
-  upvotes: Number,
-  downvotes: Number,
-  views: Number
-});
-
-const Post = mongoose.model('Post', postSchema);
 
 cloudinary.config({
   cloud_name: 'dd6xtxudi',
