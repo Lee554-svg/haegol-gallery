@@ -6,6 +6,25 @@ const commentSchema = new mongoose.Schema({
   safeText: String
 });
 
+const mongoose = require('mongoose');
+
+const postSchema = new mongoose.Schema({
+  title: String,
+  content: String,
+  author: String,
+  createdAt: String,
+  imageUrl: String,
+  safeTitle: String,
+  safeContent: String,
+  comments: Array,
+  upvotes: Number,
+  downvotes: Number,
+  views: Number,
+  isNotice: { type: Boolean, default: false } // ✅ 공지글 여부 추가
+});
+
+module.exports = mongoose.model('Post', postSchema);
+
 const postSchema = new mongoose.Schema({
   title: String,
   safeTitle: String,

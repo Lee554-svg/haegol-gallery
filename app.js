@@ -69,9 +69,9 @@ app.get('/', async (req, res) => {
   const totalPosts = await Post.countDocuments({});
   const totalPages = Math.ceil(totalPosts / POSTS_PER_PAGE);
   const posts = await Post.find({})
-    .sort({ createdAt: -1 })
-    .skip((page - 1) * POSTS_PER_PAGE)
-    .limit(POSTS_PER_PAGE);
+   .sort({ isNotice: -1, createdAt: -1 }) // ✅ 공지글 먼저, 최신순
+   .skip((page - 1) * POSTS_PER_PAGE)
+   .limit(POSTS_PER_PAGE);
 
   res.render('index', {
     posts,
@@ -235,6 +235,26 @@ app.get('/search', async (req, res) => {
     totalPosts,
     searchQuery: query
   });
+});
+
+// ✅ 공지 토글
+app.post('/toggle-notice/:id', async (req, res) => {
+  const { adminPassword } = req.body;
+
+  // 관리자 암호 확인
+  if (adminPassword !== ADMIN_PASSWORD) {
+    return res.send("<script>alert('비번 틀림'); history.back();</script>");
+  }
+
+  // 게시글 찾기
+  const post = await Post.findById(req.params.id);
+  if (!post) return res.send("<script>alert('게시글 없음'); history.back();</script>");
+
+  // 공지 상태 토글
+  post.isNotice = !post.isNotice;
+  await post.save();
+
+  res.redirect('/');
 });
 
 
