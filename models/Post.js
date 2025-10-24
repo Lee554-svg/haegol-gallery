@@ -6,8 +6,6 @@ const commentSchema = new mongoose.Schema({
   safeText: String
 });
 
-const mongoose = require('mongoose');
-
 const postSchema = new mongoose.Schema({
   title: String,
   content: String,
