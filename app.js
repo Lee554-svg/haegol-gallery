@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const session = require('express-session');
@@ -7,6 +8,12 @@ const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
 const path = require('path');
 
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log('✅ MongoDB 연결됨'))
+.catch(err => console.error('❌ MongoDB 연결 실패', err));
 const Post = require('./models/Post');
 
 const app = express();
@@ -177,5 +184,6 @@ app.post('/delete/:id', async (req, res) => {
   res.redirect('/');
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`✅ 서버 실행됨 http://localhost:${PORT}`));
+
+const port = process.env.PORT || 3000;
+app.listen(port, () => console.log(`Server running on port ${port}`));
