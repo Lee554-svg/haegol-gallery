@@ -184,6 +184,39 @@ app.post('/delete/:id', async (req, res) => {
   res.redirect('/');
 });
 
+// ✅ 검색 기능
+app.get('/search', async (req, res) => {
+  const query = req.query.q || ''; // URL ?q=검색어
+  const page = parseInt(req.query.page) || 1;
+
+  const totalPosts = await Post.countDocuments({
+    $or: [
+      { title: { $regex: query, $options: 'i' } },
+      { content: { $regex: query, $options: 'i' } }
+    ]
+  });
+
+  const totalPages = Math.ceil(totalPosts / POSTS_PER_PAGE);
+
+  const posts = await Post.find({
+    $or: [
+      { title: { $regex: query, $options: 'i' } },
+      { content: { $regex: query, $options: 'i' } }
+    ]
+  })
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * POSTS_PER_PAGE)
+    .limit(POSTS_PER_PAGE);
+
+  res.render('index', {
+    posts,
+    currentPage: page,
+    totalPages,
+    totalPosts,
+    searchQuery: query
+  });
+});
+
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Server running on port ${port}`));
