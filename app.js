@@ -184,6 +184,26 @@ app.post('/delete/:id', async (req, res) => {
   res.redirect('/');
 });
 
+// ✅ 댓글 삭제
+app.post('/delete-comment/:postId/:commentId', async (req, res) => {
+  const { adminPassword } = req.body;
+
+  // 비밀번호 확인
+  if (adminPassword !== ADMIN_PASSWORD) {
+    return res.send("<script>alert('비번 틀림'); history.back();</script>");
+  }
+
+  // 게시글 찾기
+  const post = await Post.findById(req.params.postId);
+  if (!post) return res.send("<script>alert('게시글 없음'); history.back();</script>");
+
+  // 댓글 삭제
+  post.comments = post.comments.filter(comment => comment._id.toString() !== req.params.commentId);
+  await post.save();
+
+  res.redirect(`/post/${post._id}`);
+});
+
 // ✅ 검색 기능
 app.get('/search', async (req, res) => {
   const query = req.query.q || ''; // URL ?q=검색어
